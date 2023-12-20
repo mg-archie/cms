@@ -1,6 +1,5 @@
 const inquirer = require('inquirer');
 const table = require('console.table')
-const fs = require('fs');
 const mysql = require('mysql2');
 
 const db = mysql.createConnection(
@@ -41,7 +40,8 @@ function qPrompt() {
     });
 }
 function viewDep() {
-  db.query('SELECT * FROM departments', (err, results) => {
+  // add input from inquirer
+  db.query('SELECT * FROM department', (err, results) => {
     if (err) {
       console.error(err);
       return
@@ -52,18 +52,20 @@ function viewDep() {
 }
 
 function viewRol() {
-  db.query('SELECT * FROM roles', function (err, results) {
+  // should show id, title, department, salary
+  db.query('SELECT roles.id, roles.title, department.department_name AS department, roles.salary FROM roles JOIN department ON roles.department_id = department.id;', function (err, results) {
     if (err) {
       console.error(err);
-      return
+      return;
     }
     console.table(results);
     qPrompt();
-  })
+  });
 }
 
+
 function viewEmp() {
-  db.query('SELECT * FROM employees', function (err, results) {
+  db.query('SELECT employee.id, employee.first_name, employee.last_name, roles.title, department.department_name AS department, roles.salary FROM employee JOIN roles ON employee.role_id = roles.id JOIN department ON roles.department_id = department.id;', function (err, results) {
     if (err) {
       console.error(err);
       return
@@ -74,8 +76,75 @@ function viewEmp() {
 }
 
 function addDep() {
+  inquirer.prompt(questions = [
+    {
+      type: 'input',
+      message: 'Enter a department name',
+      name: 'addDep'
+    }]).then(answers => {
+      const params = [answers.addDep]
+      db.query('INSERT INTO department (department_name) VALUES (?)', params, (err, results) => {
+        if (err) {
+          console.error(err);
+          return
+        }
+        console.log(`Department ${params} added!`);
+        qPrompt();
+      })
+    });
+}
+
+function addRol() {
+  db.query('SELECT * FROM department', (err, results) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    const depChoices = results.map(dep => dep.department_name);
+    inquirer.prompt(questions = [
+      {
+        type: 'input',
+        message: 'Enter a new role',
+        name: 'addRol'
+      },
+      {
+        type: 'input',
+        message: 'What is the roles salary?',
+        name: 'addSal'
+      },
+      {
+        type: 'list',
+        message: 'Which department is the role in?',
+        choices: depChoices,
+        name: 'whichDep'
+      }]).then(answers => {
+        const { addRol, addSal, whichDep } = answers;
+
+        const depChosen = results.find(dep => dep.department_name === whichDep);
+        if (!depChosen) {
+          console.error('Department not found')
+          return;
+        }
+        const inDep = depChosen.id;
+        const newRol = [addRol, addSal, inDep];
+        db.query('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)', newRol, (rolErr, roleResults) => {
+          if (rolErr) {
+            console.error(rolErr);
+            return
+          }
+          console.log(`Role ${addRol} added with salary of ${addSal} in ${inDep} department!`);
+          qPrompt();
+        })
+      });
+  })
+}
+
+function addEmp() {
 
 }
-// console.log(fs.render(newURL))
-// let newURL = "https://patorjk.com/software/taag/#p=author&f=3D%20Diagonal&t=CMS"
+
+function updateRol() {
+
+}
+
 qPrompt();
