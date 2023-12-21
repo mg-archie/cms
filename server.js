@@ -5,9 +5,7 @@ const mysql = require('mysql2');
 const db = mysql.createConnection(
   {
     host: 'localhost',
-    // MySQL username,
     user: 'root',
-    // MySQL password
     password: '$Datasave1',
     database: 'employees_db'
   },
@@ -39,8 +37,8 @@ function qPrompt() {
       }
     });
 }
+
 function viewDep() {
-  // add input from inquirer
   db.query('SELECT * FROM department', (err, results) => {
     if (err) {
       console.error(err);
@@ -52,7 +50,6 @@ function viewDep() {
 }
 
 function viewRol() {
-  // should show id, title, department, salary
   db.query('SELECT roles.id, roles.title, department.department_name AS department, roles.salary FROM roles JOIN department ON roles.department_id = department.id;', function (err, results) {
     if (err) {
       console.error(err);
@@ -62,7 +59,6 @@ function viewRol() {
     qPrompt();
   });
 }
-
 
 function viewEmp() {
   db.query('SELECT employee.id, employee.first_name, employee.last_name, roles.title, department.department_name AS department, roles.salary FROM employee JOIN roles ON employee.role_id = roles.id JOIN department ON roles.department_id = department.id;', function (err, results) {
@@ -148,7 +144,6 @@ function addEmp() {
     const rolChoices = results.map(role => ({
       name: role.title,
       value: role.id,
-
     }));
     inquirer.prompt(questions = [
       {
@@ -182,7 +177,50 @@ function addEmp() {
 }
 
 function updateRol() {
-
+  db.query('SELECT * FROM employee', (err, results) => {
+    if (err) {
+      console.log(err);
+      return;
     }
+    const empChoices = results.map(employee => ({
+      name: employee.first_name,
+      value: employee.id
+    }));
+    db.query('SELECT * FROM roles', (err, results) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      const rolChoices = results.map(role => ({
+        name: role.title,
+        value: role.id,
+      }));
+      inquirer.prompt(questions = [
+        {
+          type: 'list',
+          message: 'What is the employees role?',
+          choices: empChoices,
+          name: 'whichEmp'
+        },
+        {
+          type: 'list',
+          message: 'What is the employees role?',
+          choices: rolChoices,
+          name: 'whichRol'
+        }]).then(answers => {
+          const { whichEmp, whichRol } = answers;
+
+          db.query('UPDATE employee SET role_id = ? WHERE id = ?', [whichRol, whichEmp], (updateErr, updateResults) => {
+            if (updateErr) {
+              console.error(updateErr);
+              return;
+            }
+            console.log(`Employee ${whichEmp} updated to role of ${whichRol}`);
+            qPrompt();
+          })
+        })
+    })
+  })  
+}
 
 qPrompt();
