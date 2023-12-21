@@ -135,16 +135,54 @@ function addRol() {
           console.log(`Role ${addRol} added with salary of ${addSal} in ${inDep} department!`);
           qPrompt();
         })
-      });
+      })
   })
 }
 
 function addEmp() {
+  db.query('SELECT * FROM roles', (err, results) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    const rolChoices = results.map(role => ({
+      name: role.title,
+      value: role.id,
 
+    }));
+    inquirer.prompt(questions = [
+      {
+        type: 'input',
+        message: 'What is the employees first name?',
+        name: 'firstName'
+      },
+      {
+        type: 'input',
+        message: 'What is the employees last name?',
+        name: 'lastName'
+      },
+      {
+        type: 'list',
+        message: 'What is the employees role?',
+        choices: rolChoices,
+        name: 'whichRol'
+      }]).then(answers => {
+        const { firstName, lastName, whichRol } = answers;
+
+        db.query('INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)', [firstName, lastName, whichRol], (empErr, empResults) => {
+          if (empErr) {
+            console.error(empErr);
+            return
+          }
+          console.log(`Employee ${firstName} ${lastName} added with role of ${whichRol}`);
+          qPrompt();
+        })
+      })
+  })
 }
 
 function updateRol() {
 
-}
+    }
 
 qPrompt();
