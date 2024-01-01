@@ -61,7 +61,7 @@ function viewRol() {
 }
 
 function viewEmp() {
-  db.query('SELECT employee.id, employee.first_name, employee.last_name, roles.title, department.department_name AS department, roles.salary FROM employee JOIN roles ON employee.role_id = roles.id JOIN department ON roles.department_id = department.id;', function (err, results) {
+  db.query('SELECT employee.id, employee.first_name, employee.last_name, roles.title, department.department_name AS department, roles.salary, employee.manager_id FROM employee JOIN roles ON employee.role_id = roles.id JOIN department ON roles.department_id = department.id;', function (err, results) {
     if (err) {
       console.error(err);
       return
@@ -223,4 +223,19 @@ function updateRol() {
   })  
 }
 
-qPrompt();
+const logo = require('asciiart-logo');
+qPrompt(console.log(
+  logo({
+      name: 'CMS',
+      font: '3D-ASCII',
+      lineChars: 10,
+      padding: 2,
+      margin: 3,
+      borderColor: 'white',
+      logoColor: 'cyan',
+      textColor: 'white',
+  })
+  .right('version 1.0')
+  .emptyLine()
+  .render()
+));
